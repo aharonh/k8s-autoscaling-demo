@@ -1,0 +1,10 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: Queue
+metadata:
+  name: demo-service-workitems
+spec:
+  durable: true
+  name: {{ .Values.queueName }}
+  rabbitmqClusterReference:
+    name: rmq
+  vhost: /

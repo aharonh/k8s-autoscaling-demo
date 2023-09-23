@@ -1,0 +1,11 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: Binding
+metadata:
+  name: binding
+spec:
+  destination: {{ .Values.queueName }}
+  destinationType: queue
+  rabbitmqClusterReference:
+    name: rmq
+  source: {{ .Values.exchangeName }}
+  vhost: /

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Publish</h1>
+<form method="post">
+    <table>
+        <tr><td>amount:</td><td><input type=text name=amount></td></tr>
+        <tr><td colspan="2">
+            <button type="submit" formaction="/">Publish</button>
+            <button type="submit" formaction="/logout">Logout</button>
+        </tr>
+{% if amount is not none %}
+        <tr><td colspan="2">published {{ amount }} messages at {{ publish_time }}</td></tr>
+{% endif %}
+    </table>
+</form>
+</body>
+</html>

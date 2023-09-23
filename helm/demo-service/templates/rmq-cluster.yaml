@@ -1,0 +1,25 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  labels:
+    rabbitmq.com/pauseReconciliation: "false"
+  name: rmq
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: rmq
+        topologyKey: kubernetes.io/hostname
+  persistence:
+    storage: 3Gi
+  replicas: 3
+  resources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+    requests:
+      cpu: 1
+      memory: 2Gi
+  image: 

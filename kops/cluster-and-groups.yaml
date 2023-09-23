@@ -1,0 +1,399 @@
+apiVersion: kops.k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  name: demo.harley.systems
+spec:
+  api:
+    dns: {}
+    loadBalancer:
+      class: Network
+      type: Public
+  authentication:
+    aws:
+      backendMode: CRD,MountedFile
+      clusterID: demo.harley.systems
+      identityMappings:
+      - arn: arn:aws:iam::239082432822:role/admin
+        groups:
+        - system:masters
+        username: admin
+  authorization:
+    rbac: {}
+  awsLoadBalancerController:
+    enableWAFv2: false
+    enabled: true
+  certManager:
+    enabled: true
+    managed: true
+  channel: stable
+  cloudConfig:
+    awsEBSCSIDriver:
+      enabled: true
+    manageStorageClasses: true
+  cloudControllerManager:
+    cloudProvider: aws
+  cloudProvider: aws
+  clusterAutoscaler:
+    awsUseStaticInstanceList: false
+    balanceSimilarNodeGroups: true
+    enabled: true
+    scaleDownDelayAfterAdd: 1s
+    scaleDownUnneededTime: 1s
+    scaleDownUtilizationThreshold: "0.7"
+    skipNodesWithLocalStorage: false
+  configBase: s3://demo-harley-systems-state/kops/demo.harley.systems
+  dnsZone: demo.harley.systems
+  etcdClusters:
+  - etcdMembers:
+    - encryptedVolume: true
+      instanceGroup: master-us-east-1a
+      name: a
+    - encryptedVolume: true
+      instanceGroup: master-us-east-1b
+      name: b
+    - encryptedVolume: true
+      instanceGroup: master-us-east-1c
+      name: c
+    name: main
+    manager: 
+      backupRetentionDays: 90
+      logLevel: 1
+  - etcdMembers:
+    - encryptedVolume: true
+      instanceGroup: master-us-east-1a
+      name: a
+    - encryptedVolume: true
+      instanceGroup: master-us-east-1b
+      name: b
+    - encryptedVolume: true
+      instanceGroup: master-us-east-1c
+      name: c
+    name: events
+    manager:
+      backupRetentionDays: 90
+      logLevel: 1
+  externalDns:
+    provider: dns-controller
+    watchIngress: true
+  iam:
+    allowContainerRegistry: true
+    legacy: false
+    useServiceAccountExternalPermissions: true
+  kubeControllerManager:
+    horizontalPodAutoscalerDownscaleStabilization: 15s
+    horizontalPodAutoscalerSyncPeriod: 3s
+    horizontalPodAutoscalerTolerance: 1m
+  kubeDNS:
+    provider: CoreDNS
+  kubeProxy:
+    metricsBindAddress: 0.0.0.0:10249
+  kubelet:
+    anonymousAuth: false
+    authenticationTokenWebhook: true
+    authorizationMode: Webhook
+    resolvConf: /run/systemd/resolve/resolv.conf
+    runtimeRequestTimeout: 10m0s
+  kubernetesApiAccess:
+  - 0.0.0.0/0
+  # kubernetesVersion: 1.27.4
+  kubernetesVersion: 1.25.12
+  masterInternalName: api.internal.demo.harley.systems
+  masterPublicName: api.demo.harley.systems
+  metricsServer:
+    enabled: true
+    insecure: false
+  networkCIDR: 10.11.0.0/16
+  networking:
+    amazonvpc: {}
+  nodeProblemDetector:
+    cpuRequest: 10m
+    enabled: true
+    memoryRequest: 32Mi
+  nodeTerminationHandler:
+    cpuRequest: 50m
+    enableRebalanceDraining: true
+    enableRebalanceMonitoring: true
+    enableSQSTerminationDraining: false
+    enableScheduledEventDraining: true
+    enableSpotInterruptionDraining: true
+    enabled: true
+    managedASGTag: aws-node-termination-hanlder-managed
+    memoryRequest: 64Mi
+    prometheusEnable: true
+  nonMasqueradeCIDR: 100.64.0.0/10
+  podIdentityWebhook:
+    enabled: true
+  serviceAccountIssuerDiscovery:
+    discoveryStore: s3://demo-harley-systems-oidc
+    enableAWSOIDCProvider: true
+  snapshotController:
+    enabled: true
+  sshAccess:
+  - 0.0.0.0/0
+  subnets:
+  - cidr: 10.11.0.0/19
+    name: us-east-1a
+    type: Public
+    zone: us-east-1a
+  - cidr: 10.11.32.0/19
+    name: us-east-1b
+    type: Public
+    zone: us-east-1b
+  - cidr: 10.11.64.0/19
+    name: us-east-1c
+    type: Public
+    zone: us-east-1c
+  topology:
+    dns:
+      type: Public
+    masters: public
+    nodes: public
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    aws-node-termination-hanlder-managed: "yes"
+    kops.k8s.io/cluster: demo.harley.systems
+  name: master-us-east-1a
+spec:
+  autoscale: false
+  image: ssm:/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  machineType: t3.medium
+  maxSize: 1
+  minSize: 1
+  nodeLabels:
+    kops.k8s.io/instancegroup: master-us-east-1a
+  role: Master
+  rootVolumeSize: 20
+  rootVolumeType: gp3
+  subnets:
+  - us-east-1a
+  sysctlParameters:
+  - kernel.unprivileged_userns_clone=0
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    aws-node-termination-hanlder-managed: "yes"
+    kops.k8s.io/cluster: demo.harley.systems
+  name: master-us-east-1b
+spec:
+  autoscale: false
+  image: ssm:/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  machineType: t3.medium
+  maxSize: 1
+  minSize: 1
+  nodeLabels:
+    kops.k8s.io/instancegroup: master-us-east-1b
+  role: Master
+  rootVolumeSize: 20
+  rootVolumeType: gp3
+  subnets:
+  - us-east-1b
+  sysctlParameters:
+  - kernel.unprivileged_userns_clone=0
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    aws-node-termination-hanlder-managed: "yes"
+    kops.k8s.io/cluster: demo.harley.systems
+  name: master-us-east-1c
+spec:
+  autoscale: false
+  image: ssm:/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  machineType: t3.medium
+  maxSize: 1
+  minSize: 1
+  nodeLabels:
+    kops.k8s.io/instancegroup: master-us-east-1c
+  role: Master
+  rootVolumeSize: 20
+  rootVolumeType: gp3
+  subnets:
+  - us-east-1c
+  sysctlParameters:
+  - kernel.unprivileged_userns_clone=0
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    aws-node-termination-hanlder-managed: "yes"
+    kops.k8s.io/cluster: demo.harley.systems
+  name: nodes
+spec:
+  autoscale: true
+  image: ssm:/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  machineType: t3.medium
+  maxSize: 5
+  minSize: 1
+  instanceMetadata:
+    httpPutResponseHopLimit: 1
+    # required for kube2iam as it uses IMDSv1
+    httpTokens: optional
+  nodeLabels:
+    kops.k8s.io/instancegroup: nodes
+  role: Node
+  rootVolumeSize: 30
+  rootVolumeType: gp3
+  subnets:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+  sysctlParameters:
+  - kernel.unprivileged_userns_clone=0
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    aws-node-termination-hanlder-managed: "yes"
+    kops.k8s.io/cluster: demo.harley.systems
+  name: demo
+spec:
+  autoscale: true
+  image: ssm:/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  machineType: m5a.xlarge
+  maxSize: 4
+  minSize: 1
+  instanceMetadata:
+    httpPutResponseHopLimit: 1
+    # required for kube2iam as it uses IMDSv1
+    httpTokens: optional
+  nodeLabels:
+    dedicated: demo
+    kops.k8s.io/instancegroup: demo
+  role: Node
+  rootVolumeSize: 30
+  rootVolumeType: gp3
+  subnets:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+  sysctlParameters:
+  - kernel.unprivileged_userns_clone=0
+  taints:
+  - dedicated=demo:NoSchedule
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    aws-node-termination-hanlder-managed: "yes"
+    kops.k8s.io/cluster: demo.harley.systems
+  name: demo-wp
+spec:
+  autoscale: true
+  image: ssm:/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  instanceMetadata:
+    httpPutResponseHopLimit: 1
+    # required for kube2iam as it uses IMDSv1
+    httpTokens: optional
+  machineType: m5a.xlarge
+  maxSize: 4
+  minSize: 1
+  nodeLabels:
+    dedicated: demo-wp
+    kops.k8s.io/instancegroup: demo-wp
+  role: Node
+  rootVolumeSize: 20
+  rootVolumeType: gp3
+  subnets:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+  sysctlParameters:
+  - kernel.unprivileged_userns_clone=0
+  taints:
+  - dedicated=demo-wp:NoSchedule
+  warmPool:
+    enableLifecycleHook: true
+    maxSize: 4
+    minSize: 4
+
+---
+
+apiVersion: kops.k8s.io/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    aws-node-termination-hanlder-managed: "yes"
+    kops.k8s.io/cluster: demo.harley.systems
+  name: demo-wpi
+spec:
+  additionalUserData:
+  - content: |
+      #!/bin/sh
+      date >> /var/log/timelog.txt
+      sudo wget https://github.com/containerd/containerd/releases/download/v1.6.10/containerd-1.6.10-linux-amd64.tar.gz
+      sudo tar Cxzvf /usr/local containerd-1.6.10-linux-amd64.tar.gz
+      sudo wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz
+      sudo mkdir -p /opt/cni/bin
+      sudo tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
+      sudo mkdir -p /etc/containerd
+      sudo containerd config default | sudo tee /etc/containerd/config.toml
+      sudo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+      sudo curl -L https://raw.githubusercontent.com/containerd/containerd/main/containerd.service -o /etc/systemd/system/containerd.service
+      sudo systemctl daemon-reload
+      sudo systemctl enable --now containerd
+      date >> /var/log/timelog.txt
+      sudo ctr -namespace k8s.io i pull registry.k8s.io/kube-proxy:v1.25.5
+      sudo ctr -namespace k8s.io i pull k8s.gcr.io/node-problem-detector/node-problem-detector:v0.8.8
+      sudo ctr -namespace k8s.io i pull registry.k8s.io/provider-aws/aws-ebs-csi-driver:v1.12.0
+      sudo ctr -namespace k8s.io i pull registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.5.1
+      sudo ctr -namespace k8s.io i pull registry.k8s.io/sig-storage/livenessprobe:v2.6.0
+      sudo ctr -namespace k8s.io i pull 602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon-k8s-cni-init:v1.11.4
+      sudo ctr -namespace k8s.io i pull 602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon-k8s-cni:v1.11.4
+      sudo ctr -namespace k8s.io i pull docker.io/fluent/fluent-bit:1.8.10
+      sudo ctr -namespace k8s.io i pull docker.io/jtblin/kube2iam:0.11.1
+      sudo ctr -namespace k8s.io i pull docker.io/library/alpine:latest
+      sudo ctr -namespace k8s.io i pull docker.io/netdata/netdata:v1.37.1
+      sudo ctr -namespace k8s.io i pull docker.io/prom/node-exporter:v0.18.1
+      sudo ctr -namespace k8s.io i pull registry.k8s.io/pause:3.6
+      sudo ctr -namespace k8s.io i pull registry.k8s.io/provider-aws/cloud-controller-manager:v1.25.1
+      date >> /var/log/timelog.txt
+    name: 1-pull-images.sh
+    type: text/x-shellscript
+  autoscale: true
+  image: ssm:/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id
+  instanceMetadata:
+    httpPutResponseHopLimit: 1
+    # required for kube2iam as it uses IMDSv1  
+    httpTokens: optional
+  machineType: m5a.xlarge
+  maxSize: 4
+  minSize: 1
+  nodeLabels:
+    dedicated: demo-wpi
+    kops.k8s.io/instancegroup: demo-wpi
+  role: Node
+  rootVolumeSize: 20
+  rootVolumeType: gp3
+  subnets:
+  - us-east-1a
+  - us-east-1b
+  - us-east-1c
+  sysctlParameters:
+  - kernel.unprivileged_userns_clone=0
+  taints:
+  - dedicated=demo-wpi:NoSchedule
+  warmPool:
+    enableLifecycleHook: true
+    maxSize: 4
+    minSize: 4

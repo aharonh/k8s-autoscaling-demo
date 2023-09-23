@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "demoService.fullname" . }}
+  labels:
+    {{- include "demoService.labels" . | nindent 4 }}
+spec:
+  {{- if and (not .Values.hpa.enabled) (not .Values.keda.enabled) }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "demoService.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "demoService.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "demoService.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: RMQ_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: {{ printf "%s-%s" (include "demoService.fullname" .) "rmq-credentials" }}
+            - name: RMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: {{ printf "%s-%s" (include "demoService.fullname" .) "rmq-credentials" }}
+            - name: RMQ_HOST
+              value: "amqp://$(RMQ_USER):$(RMQ_PASSWORD)@rmq.{{ .Release.Namespace }}.svc.cluster.local:5672/"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: QUEUE_NAME
+              value: {{ .Values.queueName }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

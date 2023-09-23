@@ -1,0 +1,81 @@
+replicaCount: 1
+image:
+  repository: aharonharavon/demo-service
+  pullPolicy: IfNotPresent
+  #pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+# we occupy the whole t3.medium ec2 node, 
+# leaving some space for the daemonsets
+resources:
+  limits:
+    cpu: 3500m
+    memory: 14Gi
+  requests:
+      cpu: 3500m
+      memory: 14Gi
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+keda:
+  enabled: true
+  minReplicaCount: 1
+  # maxReplicaCount: 4
+  maxReplicaCount: 20
+  pollingInterval: 1
+  cooldownPeriod: 0
+  value: 1
+
+nodeSelector: 
+  # dedicated: demo
+  dedicated: demo
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    # value: demo
+    value: demo
+    effect: NoSchedule
+
+affinity: {}
+
+rmqUser: demo_service
+
+queueName: demo_service_workitems 
+exchangeName: workitems

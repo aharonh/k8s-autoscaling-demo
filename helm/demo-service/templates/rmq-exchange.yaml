@@ -1,0 +1,11 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: Exchange
+metadata:
+  name: workitems
+spec:
+  durable: true
+  name: {{ .Values.exchangeName }}
+  rabbitmqClusterReference:
+    name: rmq
+  type: topic
+  vhost: /

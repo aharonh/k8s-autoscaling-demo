@@ -1,0 +1,7 @@
+nodeSelector: 
+  dedicated: demo-wp
+  
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: demo-wp

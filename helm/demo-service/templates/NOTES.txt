@@ -1,0 +1,1 @@
+demo installed in the namespace.

@@ -1,0 +1,37 @@
+{{- if .Values.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "demoService.fullname" . }}-scaler
+spec:
+  minReplicaCount: {{ .Values.keda.minReplicaCount }}
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount }}
+  pollingInterval: {{ .Values.keda.pollingInterval }} # time between queue length check 
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod }}   # time after a scale up/down without action
+  scaleTargetRef:
+    kind: Deployment 
+    name: {{ include "demoService.fullname" . }}
+  advanced:                                          
+    horizontalPodAutoscalerConfig:                   
+      name: demo-service                   
+      behavior:                                      
+        scaleDown:
+          stabilizationWindowSeconds: 30
+          policies:
+          - type: Percent
+            value: 100
+            periodSeconds: 15
+        scaleUp:
+          stabilizationWindowSeconds: 0
+          policies:
+          - type: Pods
+            value: 20
+            periodSeconds: 2
+  triggers:
+  - type: rabbitmq
+    metadata:
+      hostFromEnv: RMQ_HOST
+      mode: QueueLength # or MessageRate
+      value: "{{ .Values.keda.value }}"
+      queueName: demo_service_workitems
+{{- end }}

@@ -1,0 +1,7 @@
+nodeSelector: 
+  dedicated: demo-wpi
+  
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: demo-wpi

@@ -1,0 +1,9 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: {{ include "demoClient.fullname" . }}
+spec:
+  importCredentialsSecret:
+    name: {{ include "demoClient.fullname" . }}-rmq-credentials
+  rabbitmqClusterReference:
+    name: rmq
