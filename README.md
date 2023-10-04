@@ -5,7 +5,7 @@ This repository contains the demo for kubernetes autoscaling presentation.
 
 To view the video presentation explaining the background, click on the image below.
 
-[![View video](https://img.youtube.com/vi/MhbxY3G9ZpA/0.jpg)](https://www.youtube.com/watch?v=MhbxY3G9ZpA)
+[![View video](video-thumbnail.png)](https://www.youtube.com/watch?v=MhbxY3G9ZpA)
 
 ## Create demo cluster
 
