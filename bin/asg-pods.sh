@@ -7,4 +7,4 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-kubectl get pods -l app.kubernetes.io/name=demo-service -o custom-columns=POD:.metadata.name,STATUS:.status.phase
+kubectl get pods -l app.kubernetes.io/name=$1 -o custom-columns=POD:.metadata.name,STATUS:.status.phase
